@@ -1,0 +1,33 @@
+package com.civicconnect.di
+
+import android.content.Context
+import androidx.room.Room
+import com.civicconnect.data.local.CivicConnectDatabase
+import com.civicconnect.data.local.dao.ComplaintDao
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
+
+@Module
+@InstallIn(SingletonComponent::class)
+object DatabaseModule {
+
+    @Provides
+    @Singleton
+    fun provideDatabase(@ApplicationContext context: Context): CivicConnectDatabase {
+        return Room.databaseBuilder(
+            context,
+            CivicConnectDatabase::class.java,
+            "civic_connect_db"
+        ).build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideComplaintDao(db: CivicConnectDatabase): ComplaintDao {
+        return db.complaintDao
+    }
+}
