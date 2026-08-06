@@ -35,6 +35,7 @@ fun RegisterScreen(
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var municipalArea by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
     val authState by viewModel.authState.collectAsState()
@@ -137,6 +138,13 @@ fun RegisterScreen(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
                 )
 
+                CivicConnectTextField(
+                    value = municipalArea,
+                    onValueChange = { municipalArea = it },
+                    label = "Municipal Area / Region",
+                    leadingIcon = Icons.Default.LocationCity
+                )
+
                 if (authState is AuthState.Error) {
                     Text(
                         text = (authState as AuthState.Error).message,
@@ -150,7 +158,7 @@ fun RegisterScreen(
 
                 CivicConnectButton(
                     text = "Create Account",
-                    onClick = { viewModel.register(name, email, password) },
+                    onClick = { viewModel.register(name, email, password, municipalArea) },
                     isLoading = authState is AuthState.Loading
                 )
 

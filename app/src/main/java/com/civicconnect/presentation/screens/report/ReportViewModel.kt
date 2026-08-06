@@ -21,7 +21,7 @@ import javax.inject.Inject
 data class ReportState(
     val title: String = "",
     val description: String = "",
-    val category: String = "Roads", // Matches dropdown option
+    val category: String = "road", // Matches dropdown option
     val severity: String = "Medium",
     val latitude: Double = 0.0,
     val longitude: Double = 0.0,
@@ -108,12 +108,12 @@ class ReportViewModel @Inject constructor(
                 
                 // Match rawCategory with available options in UI
                 val matchedCategory = when (rawCategory.lowercase()) {
-                    "road", "roads", "pothole" -> "Roads"
-                    "water", "leak", "leakage", "pipe" -> "Water"
-                    "electricity", "power", "light", "wire" -> "Electricity"
-                    "waste", "garbage", "trash", "rubbish" -> "Waste"
-                    "health", "medical", "hospital", "sanitation", "sewage", "drainage" -> "Sanitation"
-                    else -> "Other"
+                    "road", "roads", "pothole" -> "road"
+                    "water", "leak", "leakage", "pipe" -> "water"
+                    "electricity", "power", "light", "wire" -> "electricity"
+                    "waste", "garbage", "trash", "rubbish" -> "garbage"
+                    "health", "medical", "hospital", "sanitation", "sewage", "drainage" -> "sanitation"
+                    else -> "other"
                 }
 
                 _state.update { currentState ->
@@ -159,6 +159,11 @@ class ReportViewModel @Inject constructor(
         val currentState = _state.value
         if (currentState.title.isBlank() || currentState.description.isBlank() || currentState.imageFile == null) {
             _state.update { it.copy(error = "Please fill all fields and capture an image") }
+            return
+        }
+
+        if (currentState.address.isBlank() && (currentState.latitude == 0.0 || currentState.longitude == 0.0)) {
+            _state.update { it.copy(error = "Please enable location or enter a location manually") }
             return
         }
 

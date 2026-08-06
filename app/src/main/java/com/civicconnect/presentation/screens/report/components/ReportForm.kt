@@ -71,7 +71,7 @@ fun ReportForm(
             Box(modifier = Modifier.weight(1f)) {
                 DropdownSelector(
                     label = "Category",
-                    options = listOf("Roads", "Water", "Electricity", "Waste", "Sanitation", "Other"),
+                    options = listOf("road", "water", "electricity", "garbage", "sanitation", "other"),
                     selectedOption = category,
                     onOptionSelected = onCategoryChange
                 )

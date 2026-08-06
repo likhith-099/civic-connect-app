@@ -23,7 +23,7 @@ fun DropdownSelector(
         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
     ) {
         OutlinedTextField(
-            value = selectedOption,
+            value = selectedOption.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() },
             onValueChange = {},
             readOnly = true,
             label = { Text(label) },
@@ -37,7 +37,7 @@ fun DropdownSelector(
         ) {
             options.forEach { option ->
                 DropdownMenuItem(
-                    text = { Text(option) },
+                    text = { Text(option.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }) },
                     onClick = {
                         onOptionSelected(option)
                         expanded = false

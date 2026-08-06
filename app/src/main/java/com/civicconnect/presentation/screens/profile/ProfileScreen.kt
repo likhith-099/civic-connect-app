@@ -227,7 +227,7 @@ fun ProfileScreen(
                         viewModel.clearFlags()
                     },
                     title = { Text("Profile Update Failed") },
-                    text = { Text(state.error!!) },
+                    text = { Text(state.error ?: "An error occurred") },
                     confirmButton = {
                         TextButton(onClick = { 
                             showErrorDialog = false
