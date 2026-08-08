@@ -220,14 +220,15 @@ fun ProfileScreen(
             
             Spacer(modifier = Modifier.height(32.dp))
 
-            if (showErrorDialog && state.error != null) {
+            val currentError = state.error
+            if (showErrorDialog && currentError != null) {
                 AlertDialog(
                     onDismissRequest = { 
                         showErrorDialog = false
                         viewModel.clearFlags()
                     },
                     title = { Text("Profile Update Failed") },
-                    text = { Text(state.error ?: "An error occurred") },
+                    text = { Text(currentError) },
                     confirmButton = {
                         TextButton(onClick = { 
                             showErrorDialog = false
