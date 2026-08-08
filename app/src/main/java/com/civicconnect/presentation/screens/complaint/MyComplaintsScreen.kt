@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
@@ -11,6 +12,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -18,10 +20,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.civicconnect.domain.model.Complaint
-import com.civicconnect.presentation.screens.community.components.ComplaintCard
-
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.civicconnect.domain.model.Complaint
+import com.civicconnect.presentation.components.CommunityShimmer
+import com.civicconnect.presentation.components.EmptyStateView
+import com.civicconnect.presentation.screens.community.components.ComplaintCard
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,16 +53,16 @@ fun MyComplaintsScreen(
     val filters = listOf("All", "Pending", "In Progress", "Resolved", "Rejected")
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // Search Bar
+        // Search Input
         OutlinedTextField(
             value = searchQuery,
             onValueChange = viewModel::onSearchQueryChange,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            placeholder = { Text("Search my complaints...") },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-            shape = MaterialTheme.shapes.medium,
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+            placeholder = { Text("Search your reports...") },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+            shape = RoundedCornerShape(16.dp),
             singleLine = true
         )
 
@@ -67,13 +70,18 @@ fun MyComplaintsScreen(
         LazyRow(
             contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(bottom = 8.dp)
+            modifier = Modifier.padding(bottom = 10.dp)
         ) {
             items(filters) { filter ->
                 FilterChip(
                     selected = selectedFilter == filter,
                     onClick = { viewModel.onFilterChange(filter) },
-                    label = { Text(filter) }
+                    label = { Text(filter, fontWeight = FontWeight.Bold) },
+                    shape = RoundedCornerShape(50.dp),
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = Color.White
+                    )
                 )
             }
         }
@@ -86,25 +94,22 @@ fun MyComplaintsScreen(
             modifier = Modifier.fillMaxSize()
         ) {
             if (state is MyComplaintsState.Loading && filteredComplaints.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
+                CommunityShimmer()
             } else {
                 if (filteredComplaints.isEmpty() && searchQuery.isBlank() && selectedFilter == "All") {
                     EmptyMyComplaintsState()
                 } else if (filteredComplaints.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("No results matching your criteria.")
-                    }
+                    EmptyStateView(message = "No reports matching criteria.")
                 } else {
                     LazyColumn(
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         items(filteredComplaints) { complaint ->
                             MyComplaintCard(
                                 complaint = complaint,
-                                onClick = { onNavigateToDetails(complaint.id) }
+                                onClick = { onNavigateToDetails(complaint.id) },
+                                onUpvote = { viewModel.upvote(complaint.id) }
                             )
                         }
                     }
@@ -115,24 +120,13 @@ fun MyComplaintsScreen(
 }
 
 @Composable
-fun MyComplaintCard(complaint: Complaint, onClick: () -> Unit) {
-    // We can reuse ComplaintCard or create a specialized one. 
-    // The requirement mentions specific status colors.
-    ComplaintCard(complaint = complaint, onClick = onClick)
+fun MyComplaintCard(complaint: Complaint, onClick: () -> Unit, onUpvote: (() -> Unit)? = null) {
+    ComplaintCard(complaint = complaint, onClick = onClick, onUpvote = onUpvote)
 }
 
 @Composable
 fun EmptyMyComplaintsState() {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = "You haven't reported any complaints yet.",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.outline
-        )
-    }
+    EmptyStateView(
+        message = "You haven't reported any civic issues yet. Tap the report button on the home screen to submit your first report!"
+    )
 }

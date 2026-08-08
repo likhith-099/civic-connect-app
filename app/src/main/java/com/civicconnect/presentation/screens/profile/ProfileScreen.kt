@@ -13,8 +13,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -61,13 +59,17 @@ fun ProfileScreen(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Profile Account", fontWeight = FontWeight.Bold) },
+            TopAppBar(
+                title = { Text("Profile Account", fontWeight = FontWeight.Black) },
                 actions = {
                     IconButton(onClick = onNavigateToSettings) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+                        Icon(Icons.Default.Settings, contentDescription = "Settings", tint = MaterialTheme.colorScheme.primary)
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface
+                )
             )
         }
     ) { padding ->
@@ -75,41 +77,44 @@ fun ProfileScreen(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
-                .padding(horizontal = 24.dp)
+                .padding(horizontal = 20.dp)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             
-            // Modern Profile Header
+            // Avatar Header
             Box(contentAlignment = Alignment.BottomEnd) {
                 Surface(
-                    modifier = Modifier.size(120.dp),
+                    modifier = Modifier.size(110.dp),
                     shape = CircleShape,
                     color = MaterialTheme.colorScheme.primaryContainer,
-                    tonalElevation = 4.dp
+                    shadowElevation = 6.dp
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = null,
-                            modifier = Modifier.size(72.dp),
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        Text(
+                            text = (state.user?.name?.firstOrNull() ?: 'C').uppercase().toString(),
+                            style = MaterialTheme.typography.headlineLarge,
+                            fontWeight = FontWeight.Black,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontSize = 44.sp
                         )
                     }
                 }
                 Surface(
-                    modifier = Modifier.size(36.dp),
+                    modifier = Modifier.size(34.dp),
                     shape = CircleShape,
                     color = MaterialTheme.colorScheme.primary,
-                    tonalElevation = 6.dp
+                    shadowElevation = 4.dp
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.CameraAlt,
-                        contentDescription = null,
-                        modifier = Modifier.padding(8.dp),
-                        tint = Color.White
-                    )
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                            tint = Color.White
+                        )
+                    }
                 }
             }
 
@@ -120,22 +125,33 @@ fun ProfileScreen(
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Black
             )
-            Text(
-                text = state.user?.role?.uppercase() ?: "CITIZEN",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 2.sp
-            )
+            
+            Spacer(modifier = Modifier.height(4.dp))
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Surface(
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                shape = RoundedCornerShape(50.dp)
+            ) {
+                Text(
+                    text = state.user?.role?.uppercase() ?: "CITIZEN",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = 1.5.sp,
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 5.dp)
+                )
+            }
 
+            Spacer(modifier = Modifier.height(28.dp))
+
+            // Profile Card Details
             ElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
+                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
                 colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
-                Column(modifier = Modifier.padding(24.dp)) {
+                Column(modifier = Modifier.padding(20.dp)) {
                     if (isEditing) {
                         CivicConnectTextField(
                             value = name,
@@ -152,7 +168,7 @@ fun ProfileScreen(
                         CivicConnectTextField(
                             value = municipalArea,
                             onValueChange = { municipalArea = it },
-                            label = "Municipal Area / Region",
+                            label = "Municipal Region",
                             leadingIcon = Icons.Default.LocationCity
                         )
                         
@@ -162,39 +178,39 @@ fun ProfileScreen(
                         ) {
                             OutlinedButton(
                                 onClick = { isEditing = false },
-                                modifier = Modifier.weight(1f),
-                                shape = MaterialTheme.shapes.medium
+                                modifier = Modifier.weight(1f).height(48.dp),
+                                shape = RoundedCornerShape(14.dp)
                             ) {
-                                Text("Cancel")
+                                Text("Cancel", fontWeight = FontWeight.Bold)
                             }
                             Button(
                                 onClick = { 
                                     viewModel.updateProfile(name, email, municipalArea)
                                 },
-                                modifier = Modifier.weight(1f),
-                                shape = MaterialTheme.shapes.medium,
+                                modifier = Modifier.weight(1f).height(48.dp),
+                                shape = RoundedCornerShape(14.dp),
                                 enabled = !state.isLoading
                             ) {
                                 if (state.isLoading) {
-                                    CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = Color.White)
                                 } else {
-                                    Text("Save")
+                                    Text("Save Changes", fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
                     } else {
-                        ProfileInfoItem(icon = Icons.Default.Badge, label = "Full Name", value = state.user?.name ?: "...")
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                        ProfileInfoItem(icon = Icons.Default.Person, label = "Full Name", value = state.user?.name ?: "...")
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                         ProfileInfoItem(icon = Icons.Default.Email, label = "Email Address", value = state.user?.email ?: "...")
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                        ProfileInfoItem(icon = Icons.Default.LocationCity, label = "Municipal Area", value = state.user?.municipalArea ?: "Not specified")
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                        ProfileInfoItem(icon = Icons.Default.VerifiedUser, label = "Community Role", value = state.user?.role ?: "...")
- 
-                        Spacer(modifier = Modifier.height(24.dp))
- 
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                        ProfileInfoItem(icon = Icons.Default.LocationCity, label = "Municipal Area", value = state.user?.municipalArea ?: "General Region")
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                        ProfileInfoItem(icon = Icons.Default.VerifiedUser, label = "User Role", value = state.user?.role ?: "Citizen")
+
+                        Spacer(modifier = Modifier.height(20.dp))
+
                         CivicConnectButton(
-                            text = "Update Profile",
+                            text = "Edit Profile Details",
                             onClick = { isEditing = true }
                         )
                     }
@@ -208,14 +224,16 @@ fun ProfileScreen(
                     viewModel.logout()
                     onLogout()
                 },
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.large,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
-                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.3f))
+                border = androidx.compose.foundation.BorderStroke(1.5.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f))
             ) {
-                Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Logout Account", fontWeight = FontWeight.Bold)
+                Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(10.dp))
+                Text("Sign Out of Account", fontWeight = FontWeight.Bold, fontSize = 15.sp)
             }
             
             Spacer(modifier = Modifier.height(32.dp))
@@ -227,7 +245,7 @@ fun ProfileScreen(
                         showErrorDialog = false
                         viewModel.clearFlags()
                     },
-                    title = { Text("Profile Update Failed") },
+                    title = { Text("Update Failed") },
                     text = { Text(currentError) },
                     confirmButton = {
                         TextButton(onClick = { 
@@ -237,7 +255,7 @@ fun ProfileScreen(
                             Text("OK")
                         }
                     },
-                    shape = RoundedCornerShape(28.dp)
+                    shape = RoundedCornerShape(24.dp)
                 )
             }
         }
@@ -251,21 +269,24 @@ fun ProfileInfoItem(icon: ImageVector, label: String, value: String) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Surface(
-            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-            shape = CircleShape,
-            modifier = Modifier.size(40.dp)
+            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.size(42.dp)
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.padding(10.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
         }
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(14.dp))
         Column {
             Text(text = label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
-            Text(text = value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(text = value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         }
     }
 }

@@ -16,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -23,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.civicconnect.domain.model.Complaint
 import com.civicconnect.domain.model.TimelineEvent
@@ -30,8 +32,8 @@ import com.civicconnect.presentation.components.EmptyStateView
 import com.civicconnect.presentation.components.ErrorView
 import com.civicconnect.presentation.components.LoadingView
 import com.civicconnect.presentation.screens.community.components.StatusBadge
-
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.civicconnect.presentation.theme.PrimaryGradientEnd
+import com.civicconnect.presentation.theme.PrimaryGradientStart
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,7 +56,7 @@ fun ComplaintDetailsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Complaint Details", fontWeight = FontWeight.Bold) },
+                title = { Text("Report Details", fontWeight = FontWeight.Black) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -80,7 +82,7 @@ fun ComplaintDetailsScreen(
                         onRetry = { viewModel.loadComplaint() }
                     )
                 }
-                is ComplaintDetailsState.Empty -> EmptyStateView(message = "Complaint not found.")
+                is ComplaintDetailsState.Empty -> EmptyStateView(message = "Complaint record not found.")
             }
         }
     }
@@ -93,7 +95,6 @@ fun ComplaintDetailsContent(
     onUpvote: () -> Unit
 ) {
     val scrollState = rememberScrollState()
-    
     var previousStatus by remember { mutableStateOf(complaint.status) }
     val showStatusChangeAnimation = complaint.status != previousStatus
     
@@ -108,20 +109,51 @@ fun ComplaintDetailsContent(
             .fillMaxSize()
             .verticalScroll(scrollState)
     ) {
-        Box(modifier = Modifier.fillMaxWidth().height(300.dp)) {
-            complaint.imageUrl?.let { url ->
+        // Hero Image Header
+        Box(modifier = Modifier.fillMaxWidth().height(280.dp)) {
+            if (!complaint.imageUrl.isNullOrBlank()) {
                 AsyncImage(
-                    model = url,
+                    model = complaint.imageUrl,
                     contentDescription = null,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(PrimaryGradientStart, PrimaryGradientEnd)
+                            )
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PhotoCamera,
+                        contentDescription = null,
+                        modifier = Modifier.size(64.dp),
+                        tint = Color.White.copy(alpha = 0.5f)
+                    )
+                }
             }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(90.dp)
+                    .align(Alignment.BottomStart)
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f))
+                        )
+                    )
+            )
             
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .align(Alignment.TopCenter)
+                    .align(Alignment.BottomStart)
                     .padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
@@ -131,6 +163,7 @@ fun ComplaintDetailsContent(
             }
         }
 
+        // Details Body
         Column(modifier = Modifier.padding(20.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -138,34 +171,36 @@ fun ComplaintDetailsContent(
             ) {
                 Surface(
                     color = MaterialTheme.colorScheme.primaryContainer,
-                    shape = CircleShape,
-                    modifier = Modifier.size(32.dp)
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.size(36.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Category,
-                        contentDescription = null,
-                        modifier = Modifier.padding(6.dp),
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.Category,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
                 Text(
-                    text = complaint.category,
+                    text = complaint.category.uppercase(),
                     style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.Black,
                     color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(start = 8.dp)
+                    modifier = Modifier.padding(start = 10.dp)
                 )
                 
                 Spacer(modifier = Modifier.weight(1f))
                 
                 Icon(
-                    imageVector = Icons.Default.Event,
+                    imageVector = Icons.Default.Schedule,
                     contentDescription = null,
                     modifier = Modifier.size(16.dp),
                     tint = MaterialTheme.colorScheme.outline
                 )
                 Text(
-                    text = complaint.createdAt,
+                    text = complaint.createdAt.take(10),
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.padding(start = 4.dp),
                     color = MaterialTheme.colorScheme.outline
@@ -180,12 +215,12 @@ fun ComplaintDetailsContent(
                 fontWeight = FontWeight.Black
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             Text(
                 text = "ISSUE DESCRIPTION",
                 style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.Black,
                 color = MaterialTheme.colorScheme.primary,
                 letterSpacing = 1.sp
             )
@@ -193,15 +228,19 @@ fun ComplaintDetailsContent(
                 text = complaint.description,
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(top = 8.dp),
-                lineHeight = 26.sp
+                lineHeight = 24.sp,
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // Location Interactive Tile
             val context = LocalContext.current
-            Surface(
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                shape = RoundedCornerShape(16.dp),
+            ElevatedCard(
+                colors = CardDefaults.elevatedCardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                ),
+                shape = RoundedCornerShape(20.dp),
                 modifier = Modifier.fillMaxWidth(),
                 onClick = {
                     try {
@@ -209,7 +248,7 @@ fun ComplaintDetailsContent(
                         val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(geoUri))
                         context.startActivity(intent)
                     } catch (e: Exception) {
-                        // Safe catch if maps app isn't installed
+                        // Safe catch
                     }
                 }
             ) {
@@ -217,34 +256,55 @@ fun ComplaintDetailsContent(
                     modifier = Modifier.padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.LocationOn,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Incident Location",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.outline
+                        )
+                        Text(
+                            text = complaint.location.address ?: "Coordinates: ${complaint.location.latitude}, ${complaint.location.longitude}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                     Icon(
-                        imageVector = Icons.Default.LocationOn,
+                        imageVector = Icons.Default.OpenInNew,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Text(
-                        text = complaint.location.address ?: "Location data unavailable",
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(start = 12.dp),
-                        fontWeight = FontWeight.Medium
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
-            // AI Analysis Section
+            // AI Insights Section
             complaint.aiAnalysis?.let { ai ->
                 AIAnalysisCard(ai)
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(28.dp))
             }
 
             // Timeline Section
             Text(
-                text = "INVESTIGATION TIMELINE",
+                text = "INVESTIGATION & RESOLUTION TIMELINE",
                 style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.Black,
                 color = MaterialTheme.colorScheme.primary,
                 letterSpacing = 1.sp
             )
@@ -260,40 +320,42 @@ fun ComplaintDetailsContent(
                 }
             }
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
-            // Action Section
+            // Support Upvote Action Button
             Button(
                 onClick = onUpvote,
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                shape = MaterialTheme.shapes.large,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(18.dp),
                 enabled = !isUpvoting,
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
                 if (isUpvoting) {
                     CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        strokeWidth = 2.dp,
-                        color = MaterialTheme.colorScheme.onPrimary
+                        modifier = Modifier.size(22.dp),
+                        strokeWidth = 2.5.dp,
+                        color = Color.White
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = "Supporting...",
-                        fontWeight = FontWeight.ExtraBold,
+                        text = "Registering Support...",
+                        fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
                     )
                 } else {
-                    Icon(Icons.Default.ThumbUp, contentDescription = null)
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Icon(Icons.Default.ThumbUp, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(10.dp))
                     Text(
-                        text = "Support Issue (${complaint.votes})",
+                        text = "Support This Issue (${complaint.votes})",
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 16.sp
                     )
                 }
             }
             
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
@@ -306,16 +368,16 @@ fun SeverityBadge(severity: String) {
         else -> Color(0xFF388E3C)
     }
     Surface(
-        color = color.copy(alpha = 0.1f),
-        contentColor = color,
-        shape = RoundedCornerShape(6.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.5f))
+        color = color,
+        contentColor = Color.White,
+        shape = RoundedCornerShape(50.dp)
     ) {
         Text(
-            text = severity.uppercase(),
+            text = "SEVERITY: ${severity.uppercase()}",
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Black,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+            fontSize = 10.sp,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
         )
     }
 }
@@ -324,7 +386,7 @@ fun SeverityBadge(severity: String) {
 fun AIAnalysisCard(ai: com.civicconnect.domain.model.AIAnalysis) {
     ElevatedCard(
         colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f)
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.45f)
         ),
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp)
@@ -335,12 +397,12 @@ fun AIAnalysisCard(ai: com.civicconnect.domain.model.AIAnalysis) {
                     imageVector = Icons.Default.AutoAwesome,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.tertiary,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(22.dp)
                 )
                 Text(
-                    text = "Smart AI Insights",
-                    modifier = Modifier.padding(start = 8.dp),
-                    style = MaterialTheme.typography.labelLarge,
+                    text = "AI Automated Diagnostics",
+                    modifier = Modifier.padding(start = 10.dp),
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Black,
                     color = MaterialTheme.colorScheme.tertiary
                 )
@@ -359,7 +421,7 @@ fun AIAnalysisCard(ai: com.civicconnect.domain.model.AIAnalysis) {
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "Confidence Score:",
+                        text = "Confidence:",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.outline
                     )
@@ -372,7 +434,7 @@ fun AIAnalysisCard(ai: com.civicconnect.domain.model.AIAnalysis) {
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "Urgency:",
+                        text = "Urgency Rating:",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.outline
                     )
@@ -397,13 +459,13 @@ fun TimelineItem(
     Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.width(40.dp)
+            modifier = Modifier.width(36.dp)
         ) {
             Surface(
-                modifier = Modifier.size(16.dp),
+                modifier = Modifier.size(18.dp),
                 shape = CircleShape,
                 color = MaterialTheme.colorScheme.primary,
-                border = androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primaryContainer)
+                border = androidx.compose.foundation.BorderStroke(3.dp, MaterialTheme.colorScheme.primaryContainer)
             ) {}
             if (!isLast) {
                 Box(
@@ -422,7 +484,7 @@ fun TimelineItem(
             Column(modifier = Modifier.padding(bottom = 24.dp, start = 8.dp)) {
                 Text(
                     text = event.status,
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
                 Text(

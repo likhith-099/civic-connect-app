@@ -6,8 +6,10 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -29,8 +31,6 @@ import com.civicconnect.presentation.screens.components.CivicConnectButton
 import com.civicconnect.presentation.screens.report.components.*
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.FusedLocationProviderClient
-import java.io.File
-import java.io.FileOutputStream
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -86,10 +86,11 @@ fun ReportScreen(
     } else {
         Scaffold(
             topBar = {
-                CenterAlignedTopAppBar(
-                    title = { Text("Report Issue", fontWeight = FontWeight.Bold) },
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.background
+                TopAppBar(
+                    title = { Text("Report Civic Issue", fontWeight = FontWeight.Black) },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        titleContentColor = MaterialTheme.colorScheme.onSurface
                     )
                 )
             }
@@ -99,25 +100,22 @@ fun ReportScreen(
                     .fillMaxSize()
                     .padding(padding)
                     .verticalScroll(scrollState)
-                    .padding(24.dp)
+                    .padding(20.dp)
             ) {
-                // Image Selection Section
-                Text(
-                    text = "VISUAL EVIDENCE",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
-                )
-                
-                Spacer(modifier = Modifier.height(12.dp))
+                // Step 1: Visual Evidence
+                SectionHeader(title = "1. VISUAL EVIDENCE", subtitle = "Attach photo to allow AI auto-classification")
 
-                Card(
+                Spacer(modifier = Modifier.height(10.dp))
+
+                ElevatedCard(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(220.dp),
+                        .height(230.dp),
                     shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    colors = CardDefaults.elevatedCardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    ),
+                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
                 ) {
                     Box(modifier = Modifier.fillMaxSize()) {
                         if (state.imageFile != null) {
@@ -130,7 +128,7 @@ fun ReportScreen(
                             if (state.isAiClassifying) {
                                 Surface(
                                     modifier = Modifier.fillMaxSize(),
-                                    color = Color.Black.copy(alpha = 0.6f)
+                                    color = Color.Black.copy(alpha = 0.65f)
                                 ) {
                                     Column(
                                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -138,7 +136,12 @@ fun ReportScreen(
                                     ) {
                                         CircularProgressIndicator(color = Color.White, strokeWidth = 3.dp)
                                         Spacer(modifier = Modifier.height(12.dp))
-                                        Text("AI analyzing issue...", color = Color.White, style = MaterialTheme.typography.bodyMedium)
+                                        Text(
+                                            "AI analyzing photo...",
+                                            color = Color.White,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Bold
+                                        )
                                     }
                                 }
                             }
@@ -147,59 +150,69 @@ fun ReportScreen(
                                 modifier = Modifier.align(Alignment.Center),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.AddAPhoto,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(64.dp),
-                                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
-                                )
+                                Surface(
+                                    shape = CircleShape,
+                                    color = MaterialTheme.colorScheme.primaryContainer,
+                                    modifier = Modifier.size(64.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            imageVector = Icons.Default.AddAPhoto,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(32.dp),
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
                                 Spacer(modifier = Modifier.height(12.dp))
                                 Text(
-                                    "Attach photo to start",
+                                    "Take or select photo of issue",
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.outline
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
                     }
                 }
 
+                Spacer(modifier = Modifier.height(12.dp))
+
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Button(
                         onClick = { showCamera = true },
-                        modifier = Modifier.weight(1f),
-                        shape = MaterialTheme.shapes.medium
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        shape = RoundedCornerShape(16.dp)
                     ) {
-                        Icon(Icons.Default.CameraAlt, contentDescription = null)
+                        Icon(Icons.Default.CameraAlt, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text("Camera")
+                        Text("Take Photo", fontWeight = FontWeight.Bold)
                     }
                     OutlinedButton(
                         onClick = { galleryLauncher.launch("image/*") },
-                        modifier = Modifier.weight(1f),
-                        shape = MaterialTheme.shapes.medium
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        shape = RoundedCornerShape(16.dp)
                     ) {
-                        Icon(Icons.Default.PhotoLibrary, contentDescription = null)
+                        Icon(Icons.Default.PhotoLibrary, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text("Gallery")
+                        Text("Gallery", fontWeight = FontWeight.Bold)
                     }
                 }
 
-                HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                Spacer(modifier = Modifier.height(24.dp))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                Spacer(modifier = Modifier.height(20.dp))
 
-                Text(
-                    text = "DETAILS & DESCRIPTION",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
-                )
-                
+                // Step 2: Issue Details
+                SectionHeader(title = "2. ISSUE DETAILS", subtitle = "Specify category, title, and description")
+
                 Spacer(modifier = Modifier.height(12.dp))
 
                 ReportForm(
@@ -216,15 +229,12 @@ fun ReportScreen(
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
-                
-                Text(
-                    text = "INCIDENT LOCATION",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
-                )
-                
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Step 3: Location Preview
+                SectionHeader(title = "3. INCIDENT LOCATION", subtitle = "Auto-detected GPS position")
+
                 Spacer(modifier = Modifier.height(12.dp))
 
                 LocationPreview(
@@ -236,43 +246,64 @@ fun ReportScreen(
                 Spacer(modifier = Modifier.height(32.dp))
 
                 CivicConnectButton(
-                    text = "Submit Professional Report",
+                    text = "Submit Official Report",
                     onClick = viewModel::submitReport,
-                    isLoading = state.isLoading
+                    isLoading = state.isLoading,
+                    icon = Icons.Default.Send
                 )
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Dialogs remain functional
                 if (state.isSuccess) {
                     AlertDialog(
                         onDismissRequest = { viewModel.resetState(); onReportSuccess() },
-                        title = { Text("Report Submitted") },
-                        text = { Text("Thank you for contributing to a better community. Your report is now under review.") },
+                        title = { Text("Report Successfully Submitted", fontWeight = FontWeight.Bold) },
+                        text = { Text("Thank you for helping keep your community safe and clean. Your report has been dispatched to municipal authorities.") },
                         confirmButton = {
-                            Button(onClick = { viewModel.resetState(); onReportSuccess() }) {
-                                Text("Back to Home")
+                            Button(
+                                onClick = { viewModel.resetState(); onReportSuccess() },
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text("Return to Home")
                             }
                         },
-                        shape = RoundedCornerShape(28.dp)
+                        shape = RoundedCornerShape(24.dp)
                     )
                 }
 
                 if (state.error != null) {
                     AlertDialog(
                         onDismissRequest = viewModel::clearError,
-                        title = { Text("Submission Error") },
+                        title = { Text("Submission Error", fontWeight = FontWeight.Bold) },
                         text = { Text(state.error!!) },
                         confirmButton = {
                             TextButton(onClick = viewModel::clearError) {
-                                Text("Got it")
+                                Text("OK")
                             }
                         },
-                        shape = RoundedCornerShape(28.dp)
+                        shape = RoundedCornerShape(24.dp)
                     )
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun SectionHeader(title: String, subtitle: String) {
+    Column {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.Black,
+            letterSpacing = 1.sp
+        )
+        Text(
+            text = subtitle,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 

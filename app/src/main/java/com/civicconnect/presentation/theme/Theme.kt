@@ -31,7 +31,9 @@ private val LightColorScheme = lightColorScheme(
     background = BackgroundLight,
     onBackground = OnBackgroundLight,
     surface = SurfaceLight,
-    onSurface = OnSurfaceLight
+    onSurface = OnSurfaceLight,
+    surfaceVariant = SurfaceVariantLight,
+    onSurfaceVariant = OnSurfaceVariantLight
 )
 
 private val DarkColorScheme = darkColorScheme(
@@ -54,13 +56,15 @@ private val DarkColorScheme = darkColorScheme(
     background = BackgroundDark,
     onBackground = OnBackgroundDark,
     surface = SurfaceDark,
-    onSurface = OnSurfaceDark
+    onSurface = OnSurfaceDark,
+    surfaceVariant = SurfaceVariantDark,
+    onSurfaceVariant = OnSurfaceVariantDark
 )
 
 @Composable
 fun CivicConnectTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -76,7 +80,7 @@ fun CivicConnectTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.primary.toArgb()
+            window.statusBarColor = colorScheme.surface.toArgb()
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }
     }

@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -25,6 +26,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.civicconnect.presentation.theme.InProgressColor
+import com.civicconnect.presentation.theme.PendingColor
+import com.civicconnect.presentation.theme.PrimaryGradientEnd
+import com.civicconnect.presentation.theme.PrimaryGradientStart
+import com.civicconnect.presentation.theme.ResolvedColor
 import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,16 +58,24 @@ fun HomeScreen(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
+            TopAppBar(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            Icons.Default.Public,
-                            contentDescription = null,
-                            modifier = Modifier.size(22.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Surface(
+                            modifier = Modifier.size(36.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    Icons.Default.Public,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(22.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
                         Text(
                             text = "CivicConnect",
                             style = MaterialTheme.typography.titleLarge,
@@ -72,22 +86,23 @@ fun HomeScreen(
                 actions = {
                     IconButton(onClick = onProfileClick) {
                         Surface(
-                            modifier = Modifier.size(36.dp),
+                            modifier = Modifier.size(40.dp),
                             shape = CircleShape,
-                            color = MaterialTheme.colorScheme.primaryContainer
+                            color = MaterialTheme.colorScheme.primary,
+                            shadowElevation = 2.dp
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Text(
-                                    text = user?.name?.firstOrNull()?.uppercase() ?: "?",
-                                    style = MaterialTheme.typography.labelLarge,
+                                    text = user?.name?.firstOrNull()?.uppercase() ?: "C",
+                                    style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Black,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    color = Color.White
                                 )
                             }
                         }
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     titleContentColor = MaterialTheme.colorScheme.onSurface
                 )
@@ -99,15 +114,90 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .padding(horizontal = 20.dp, vertical = 12.dp)
         ) {
-            // Welcome Card
+            // Welcome Banner Card
             WelcomeCard(
                 userName = user?.name ?: "Citizen",
                 municipalArea = user?.municipalArea
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Quick Report Primary CTA
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(64.dp)
+                    .shadow(
+                        elevation = 6.dp,
+                        shape = RoundedCornerShape(20.dp),
+                        ambientColor = PrimaryGradientStart.copy(alpha = 0.3f),
+                        spotColor = PrimaryGradientStart.copy(alpha = 0.5f)
+                    )
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(PrimaryGradientStart, PrimaryGradientEnd)
+                        )
+                    )
+            ) {
+                Button(
+                    onClick = onReportClick,
+                    modifier = Modifier.fillMaxSize(),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = Color.White
+                    ),
+                    contentPadding = PaddingValues(horizontal = 20.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Surface(
+                                shape = CircleShape,
+                                color = Color.White.copy(alpha = 0.2f),
+                                modifier = Modifier.size(40.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        Icons.Default.AddAPhoto,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(22.dp)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.width(14.dp))
+                            Column {
+                                Text(
+                                    text = "Report New Issue",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = Color.White
+                                )
+                                Text(
+                                    text = "Snap photo & notify authorities",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color.White.copy(alpha = 0.85f)
+                                )
+                            }
+                        }
+                        Icon(
+                            Icons.Default.ArrowForwardIos,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(28.dp))
 
             // Section Header
             Row(
@@ -116,35 +206,51 @@ fun HomeScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Dashboard Overview",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    text = "Activity Dashboard",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.ExtraBold
                 )
-                Text(
-                    text = "Live",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = ResolvedGreen,
-                    fontWeight = FontWeight.Bold
-                )
+                Surface(
+                    color = ResolvedColor.copy(alpha = 0.12f),
+                    shape = RoundedCornerShape(50.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(ResolvedColor)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Live Sync",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = ResolvedColor,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-            // Stats Grid — 2 columns
+            // Stats 2x2 Grid
             val statItems = listOf(
-                StatItem("Total Reports", stats.totalComplaints, Icons.Default.Assessment, MaterialTheme.colorScheme.primary),
-                StatItem("Pending", stats.pendingComplaints, Icons.Default.Schedule, PendingOrange),
-                StatItem("In Progress", stats.inProgressComplaints, Icons.Default.Autorenew, InProgressBlue),
-                StatItem("Resolved", stats.resolvedComplaints, Icons.Default.CheckCircle, ResolvedGreen)
+                StatItem("Total Submitted", stats.totalComplaints, Icons.Default.Assignment, MaterialTheme.colorScheme.primary),
+                StatItem("Pending Review", stats.pendingComplaints, Icons.Default.Schedule, PendingColor),
+                StatItem("In Progress", stats.inProgressComplaints, Icons.Default.Autorenew, InProgressColor),
+                StatItem("Resolved", stats.resolvedComplaints, Icons.Default.CheckCircle, ResolvedColor)
             )
 
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 statItems.chunked(2).forEach { row ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                         row.forEach { item ->
                             StatCard(item = item, modifier = Modifier.weight(1f))
                         }
-                        // If only one item in last row, fill space
                         if (row.size == 1) {
                             Spacer(modifier = Modifier.weight(1f))
                         }
@@ -154,34 +260,10 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Quick Report CTA
-            Button(
-                onClick = onReportClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                ),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
-            ) {
-                Icon(Icons.Default.AddCircleOutline, contentDescription = null)
-                Spacer(modifier = Modifier.width(10.dp))
-                Text(
-                    text = "Report a Civic Issue",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
-                )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Tip Card
+            // Community Tip Card
             TipCard()
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
@@ -192,21 +274,21 @@ private fun WelcomeCard(userName: String, municipalArea: String?) {
         in 5..11 -> "Good Morning"
         in 12..16 -> "Good Afternoon"
         in 17..20 -> "Good Evening"
-        else -> "Hello"
+        else -> "Good Night"
     }
 
-    Surface(
+    ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.primary
+        shape = RoundedCornerShape(28.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
     ) {
         Box(
             modifier = Modifier
                 .background(
                     brush = Brush.linearGradient(
                         colors = listOf(
-                            MaterialTheme.colorScheme.primary,
-                            MaterialTheme.colorScheme.primary.copy(green = 0.7f, blue = 1f)
+                            PrimaryGradientStart,
+                            PrimaryGradientEnd
                         )
                     )
                 )
@@ -216,51 +298,53 @@ private fun WelcomeCard(userName: String, municipalArea: String?) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "$greeting,",
+                            text = greeting,
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.White.copy(alpha = 0.8f)
                         )
+                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = userName.split(" ").firstOrNull() ?: userName,
+                            text = userName,
                             style = MaterialTheme.typography.headlineMedium,
                             color = Color.White,
                             fontWeight = FontWeight.Black
                         )
                     }
                     Surface(
-                        modifier = Modifier.size(56.dp),
+                        modifier = Modifier.size(52.dp),
                         shape = CircleShape,
-                        color = Color.White.copy(alpha = 0.15f)
+                        color = Color.White.copy(alpha = 0.2f)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
-                                Icons.Default.Person,
+                                Icons.Default.VerifiedUser,
                                 contentDescription = null,
-                                modifier = Modifier.size(32.dp),
+                                modifier = Modifier.size(28.dp),
                                 tint = Color.White
                             )
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-                HorizontalDivider(color = Color.White.copy(alpha = 0.2f), thickness = 0.5.dp)
+                HorizontalDivider(color = Color.White.copy(alpha = 0.25f), thickness = 1.dp)
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        Icons.Default.LocationCity,
+                        Icons.Default.LocationOn,
                         contentDescription = null,
-                        modifier = Modifier.size(14.dp),
-                        tint = Color.White.copy(alpha = 0.7f)
+                        modifier = Modifier.size(16.dp),
+                        tint = Color.White.copy(alpha = 0.9f)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = if (!municipalArea.isNullOrBlank()) municipalArea else "Making your city better, one report at a time.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.White.copy(alpha = 0.85f)
+                        text = if (!municipalArea.isNullOrBlank()) "Region: $municipalArea" else "Active Community Member",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = Color.White.copy(alpha = 0.9f),
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
@@ -280,7 +364,7 @@ fun StatCard(item: StatItem, modifier: Modifier = Modifier) {
 
     ElevatedCard(
         modifier = modifier.height(130.dp),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(22.dp),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surface
@@ -292,32 +376,38 @@ fun StatCard(item: StatItem, modifier: Modifier = Modifier) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Surface(
-                color = item.color.copy(alpha = 0.12f),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.size(40.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = item.icon,
-                        contentDescription = null,
-                        tint = item.color,
-                        modifier = Modifier.size(22.dp)
-                    )
+                Surface(
+                    color = item.color.copy(alpha = 0.12f),
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.size(44.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = item.icon,
+                            contentDescription = null,
+                            tint = item.color,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
                 }
             }
 
             Column {
                 Text(
                     text = animatedCount.toString(),
-                    style = MaterialTheme.typography.headlineSmall,
+                    style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Black,
                     color = item.color
                 )
                 Text(
                     text = item.label,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.outline,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1
                 )
             }
@@ -329,33 +419,46 @@ fun StatCard(item: StatItem, modifier: Modifier = Modifier) {
 private fun TipCard() {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f))
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(18.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                Icons.Default.Lightbulb,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = "Tip: Add a photo to your report — it helps authorities identify the issue 3x faster.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                lineHeight = 18.sp
-            )
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.secondary,
+                modifier = Modifier.size(36.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        Icons.Default.Lightbulb,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.width(14.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Pro Tip for Citizens",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "Adding clear photos & precise locations resolves civic issues up to 3x faster!",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }
-
-private val PendingOrange = Color(0xFFF57C00)
-private val InProgressBlue = Color(0xFF1976D2)
-private val ResolvedGreen = Color(0xFF388E3C)
 
 data class StatItem(
     val label: String,

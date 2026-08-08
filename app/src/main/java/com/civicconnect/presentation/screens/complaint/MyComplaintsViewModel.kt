@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.civicconnect.domain.model.Complaint
 import com.civicconnect.domain.usecase.complaint.GetMyComplaintsUseCase
+import com.civicconnect.domain.usecase.complaint.UpvoteComplaintUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -18,7 +19,8 @@ sealed class MyComplaintsState {
 
 @HiltViewModel
 class MyComplaintsViewModel @Inject constructor(
-    private val getMyComplaintsUseCase: GetMyComplaintsUseCase
+    private val getMyComplaintsUseCase: GetMyComplaintsUseCase,
+    private val upvoteComplaintUseCase: UpvoteComplaintUseCase
 ) : ViewModel() {
 
     private val _allComplaints = MutableStateFlow<List<Complaint>>(emptyList())
@@ -58,6 +60,18 @@ class MyComplaintsViewModel @Inject constructor(
                 filterComplaints()
             }.onFailure {
                 _state.value = MyComplaintsState.Error(it.message ?: "Failed to load complaints")
+            }
+        }
+    }
+
+    fun upvote(complaintId: String) {
+        viewModelScope.launch {
+            val result = upvoteComplaintUseCase(complaintId)
+            result.onSuccess { updated ->
+                _allComplaints.value = _allComplaints.value.map {
+                    if (it.id == complaintId) updated else it
+                }
+                filterComplaints()
             }
         }
     }

@@ -3,11 +3,14 @@ package com.civicconnect.presentation
 import androidx.compose.animation.*
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -51,7 +54,8 @@ fun MainScreen(
             ) {
                 NavigationBar(
                     tonalElevation = 8.dp,
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    modifier = Modifier.clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
                 ) {
                     val items = listOf(
                         BottomNavItem.Home,
@@ -68,14 +72,14 @@ fun MainScreen(
                                 Icon(
                                     imageVector = item.icon,
                                     contentDescription = item.title,
-                                    tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                                    tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                                 ) 
                             },
                             label = { 
                                 Text(
                                     text = item.title,
                                     style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
+                                    fontWeight = if (selected) FontWeight.ExtraBold else FontWeight.Medium
                                 ) 
                             },
                             selected = selected,
@@ -90,10 +94,10 @@ fun MainScreen(
                             },
                             colors = NavigationBarItemDefaults.colors(
                                 selectedIconColor = MaterialTheme.colorScheme.primary,
-                                unselectedIconColor = MaterialTheme.colorScheme.outline,
+                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                                 selectedTextColor = MaterialTheme.colorScheme.primary,
-                                unselectedTextColor = MaterialTheme.colorScheme.outline,
-                                indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                indicatorColor = MaterialTheme.colorScheme.primaryContainer
                             )
                         )
                     }

@@ -31,32 +31,37 @@ import com.civicconnect.presentation.theme.ResolvedColor
 @Composable
 fun ComplaintCard(
     complaint: Complaint,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onUpvote: (() -> Unit)? = null
 ) {
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { visible = true }
 
     AnimatedVisibility(
         visible = visible,
-        enter = expandVertically(animationSpec = tween(400)) + fadeIn(animationSpec = tween(400))
+        enter = expandVertically(animationSpec = tween(350)) + fadeIn(animationSpec = tween(350))
     ) {
         ElevatedCard(
             onClick = onClick,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 6.dp),
-            shape = RoundedCornerShape(20.dp),
-            elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp, pressedElevation = 6.dp),
+                .padding(vertical = 8.dp),
+            shape = RoundedCornerShape(24.dp),
+            elevation = CardDefaults.elevatedCardElevation(
+                defaultElevation = 2.dp,
+                pressedElevation = 6.dp,
+                hoveredElevation = 4.dp
+            ),
             colors = CardDefaults.elevatedCardColors(
                 containerColor = MaterialTheme.colorScheme.surface
             )
         ) {
             Column {
-                // Image Section
+                // Image Header Section
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp)
+                        .height(210.dp)
                 ) {
                     if (!complaint.imageUrl.isNullOrBlank()) {
                         SubcomposeAsyncImage(
@@ -68,43 +73,43 @@ fun ComplaintCard(
                             error = { ImagePlaceholder(Icons.Default.BrokenImage) }
                         )
                     } else {
-                        ImagePlaceholder(Icons.Default.AddAPhoto)
+                        ImagePlaceholder(Icons.Default.PhotoCamera)
                     }
 
-                    // Gradient scrim at bottom for readability
+                    // Scrim gradient overlay for high visibility
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(80.dp)
+                            .height(90.dp)
                             .align(Alignment.BottomStart)
                             .background(
                                 Brush.verticalGradient(
-                                    colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.55f))
+                                    colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.65f))
                                 )
                             )
                     )
 
-                    // Status badge — top right
+                    // Status Badge (Top Right)
                     Box(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
-                            .padding(12.dp)
+                            .padding(14.dp)
                     ) {
                         StatusBadge(status = complaint.status)
                     }
 
-                    // Category chip — bottom left, on scrim
+                    // Category Pill (Bottom Left)
                     Surface(
                         modifier = Modifier
                             .align(Alignment.BottomStart)
-                            .padding(12.dp),
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.88f),
+                            .padding(14.dp),
+                        color = MaterialTheme.colorScheme.primary,
                         shape = RoundedCornerShape(50.dp),
-                        tonalElevation = 0.dp
+                        tonalElevation = 4.dp
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                         ) {
                             Icon(
                                 imageVector = categoryIcon(complaint.category),
@@ -112,20 +117,20 @@ fun ComplaintCard(
                                 modifier = Modifier.size(14.dp),
                                 tint = Color.White
                             )
-                            Spacer(modifier = Modifier.width(5.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = complaint.category,
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White,
-                                fontSize = 11.sp
+                                fontSize = 12.sp
                             )
                         }
                     }
                 }
 
-                // Content Section
-                Column(modifier = Modifier.padding(16.dp)) {
+                // Body Section
+                Column(modifier = Modifier.padding(18.dp)) {
                     Text(
                         text = complaint.title,
                         style = MaterialTheme.typography.titleMedium,
@@ -146,25 +151,25 @@ fun ComplaintCard(
                         lineHeight = 18.sp
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
-                    // Location
+                    // Location Info
                     if (!complaint.location.address.isNullOrBlank()) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(bottom = 10.dp)
+                            modifier = Modifier.padding(bottom = 12.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.LocationOn,
                                 contentDescription = null,
-                                modifier = Modifier.size(14.dp),
-                                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.primary
                             )
-                            Spacer(modifier = Modifier.width(4.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = complaint.location.address,
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.outline,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
@@ -172,49 +177,51 @@ fun ComplaintCard(
                     }
 
                     HorizontalDivider(
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
-                        thickness = 0.5.dp
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                        thickness = 1.dp
                     )
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                    // Footer: votes + date
+                    // Footer Row
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Upvotes
+                        // Vote Pill - Independent Click Handler
                         Surface(
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+                            onClick = { onUpvote?.invoke() },
+                            enabled = onUpvote != null,
+                            color = MaterialTheme.colorScheme.primaryContainer,
                             shape = RoundedCornerShape(50.dp)
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.ThumbUp,
                                     contentDescription = null,
                                     modifier = Modifier.size(14.dp),
-                                    tint = MaterialTheme.colorScheme.primary
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
-                                Spacer(modifier = Modifier.width(5.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = "${complaint.votes}",
+                                    text = "${complaint.votes} Supports",
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
                             }
                         }
 
-                        // Date
+                        // Date Tag
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
-                                imageVector = Icons.Default.CalendarToday,
+                                imageVector = Icons.Default.Schedule,
                                 contentDescription = null,
-                                modifier = Modifier.size(12.dp),
+                                modifier = Modifier.size(14.dp),
                                 tint = MaterialTheme.colorScheme.outline
                             )
                             Spacer(modifier = Modifier.width(4.dp))
@@ -236,21 +243,21 @@ fun ImagePlaceholder(icon: ImageVector) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surfaceVariant),
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                modifier = Modifier.size(48.dp),
+                modifier = Modifier.size(44.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "No Image",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                text = "No Photo Provided",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
             )
         }
     }
@@ -258,7 +265,7 @@ fun ImagePlaceholder(icon: ImageVector) {
 
 @Composable
 fun ImageShimmer() {
-    val transition = rememberInfiniteTransition(label = "shimmer")
+    val transition = rememberInfiniteTransition(label = "shimmer_img")
     val alpha by transition.animateFloat(
         initialValue = 0.3f,
         targetValue = 0.7f,
@@ -266,7 +273,7 @@ fun ImageShimmer() {
             animation = tween(900, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
-        label = "shimmer_alpha"
+        label = "shimmer_img_alpha"
     )
     Box(
         modifier = Modifier
@@ -286,27 +293,27 @@ fun StatusBadge(status: String) {
     }
 
     Surface(
-        color = color.copy(alpha = 0.92f),
+        color = color,
         contentColor = Color.White,
         shape = RoundedCornerShape(50.dp),
-        tonalElevation = 4.dp
+        shadowElevation = 3.dp
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                modifier = Modifier.size(12.dp),
+                modifier = Modifier.size(13.dp),
                 tint = Color.White
             )
-            Spacer(modifier = Modifier.width(4.dp))
+            Spacer(modifier = Modifier.width(6.dp))
             Text(
                 text = status.uppercase(),
                 style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Black,
-                fontSize = 10.sp,
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 11.sp,
                 letterSpacing = 0.5.sp
             )
         }
@@ -324,9 +331,8 @@ private fun categoryIcon(category: String): ImageVector = when (category.lowerca
 
 private fun formatDate(dateStr: String): String {
     return try {
-        // Try to parse ISO date and show short form
         val parts = dateStr.take(10).split("-")
-        if (parts.size == 3) "${parts[2]} ${monthName(parts[1].toInt())} ${parts[0].takeLast(2)}"
+        if (parts.size == 3) "${parts[2]} ${monthName(parts[1].toInt())} ${parts[0]}"
         else dateStr.take(10)
     } catch (e: Exception) {
         dateStr.take(10)

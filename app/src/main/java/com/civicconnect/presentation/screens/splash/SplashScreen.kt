@@ -5,6 +5,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material3.*
@@ -17,19 +18,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.civicconnect.presentation.theme.PrimaryGradientEnd
+import com.civicconnect.presentation.theme.PrimaryGradientStart
 
 @Composable
 fun SplashScreen() {
-    val scale = remember { Animatable(0f) }
+    val scale = remember { Animatable(0.4f) }
+    val alpha = remember { Animatable(0f) }
 
     LaunchedEffect(key1 = true) {
+        alpha.animateTo(1f, animationSpec = tween(600))
         scale.animateTo(
-            targetValue = 0.8f,
-            animationSpec = tween(
-                durationMillis = 800,
-                easing = {
-                    OvershootInterpolator(4f).getInterpolation(it)
-                }
+            targetValue = 1.0f,
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessLow
             )
         )
     }
@@ -39,10 +42,7 @@ fun SplashScreen() {
             .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
-                    colors = listOf(
-                        MaterialTheme.colorScheme.primary,
-                        MaterialTheme.colorScheme.primaryContainer
-                    )
+                    colors = listOf(PrimaryGradientStart, PrimaryGradientEnd, Color(0xFF0F172A))
                 )
             ),
         contentAlignment = Alignment.Center
@@ -52,41 +52,54 @@ fun SplashScreen() {
             modifier = Modifier.scale(scale.value)
         ) {
             Surface(
-                modifier = Modifier.size(120.dp),
+                modifier = Modifier.size(130.dp),
                 shape = CircleShape,
-                color = Color.White.copy(alpha = 0.2f)
+                color = Color.White.copy(alpha = 0.15f),
+                shadowElevation = 12.dp
             ) {
-                Icon(
-                    imageVector = Icons.Default.Public,
-                    contentDescription = null,
-                    modifier = Modifier.padding(24.dp).size(64.dp),
-                    tint = Color.White
-                )
+                Box(contentAlignment = Alignment.Center) {
+                    Surface(
+                        modifier = Modifier.size(100.dp),
+                        shape = CircleShape,
+                        color = Color.White
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.Public,
+                                contentDescription = null,
+                                modifier = Modifier.size(56.dp),
+                                tint = PrimaryGradientStart
+                            )
+                        }
+                    }
+                }
             }
             
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(28.dp))
             
             Text(
                 text = "CivicConnect",
                 style = MaterialTheme.typography.headlineLarge,
                 color = Color.White,
-                fontWeight = FontWeight.ExtraBold
+                fontWeight = FontWeight.ExtraBold,
+                letterSpacing = (-0.5).sp
             )
             
-            Text(
-                text = "Smart Complaint Management",
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.White.copy(alpha = 0.8f),
-                letterSpacing = 2.sp
-            )
-        }
-    }
-}
+            Spacer(modifier = Modifier.height(8.dp))
 
-class OvershootInterpolator(private val tension: Float) {
-    fun getInterpolation(input: Float): Float {
-        var t = input
-        t -= 1.0f
-        return t * t * ((tension + 1) * t + tension) + 1.0f
+            Surface(
+                color = Color.White.copy(alpha = 0.2f),
+                shape = RoundedCornerShape(50.dp)
+            ) {
+                Text(
+                    text = "SMART CITIZEN REPORTING",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 2.sp,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+                )
+            }
+        }
     }
 }

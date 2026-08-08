@@ -10,6 +10,9 @@ interface ComplaintDao {
     @Query("SELECT * FROM complaints ORDER BY createdAt DESC")
     fun getAllComplaints(): Flow<List<ComplaintEntity>>
 
+    @Query("SELECT * FROM complaints WHERE id = :id LIMIT 1")
+    suspend fun getComplaintById(id: String): ComplaintEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertComplaints(complaints: List<ComplaintEntity>)
 

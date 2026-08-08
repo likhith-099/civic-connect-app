@@ -33,8 +33,12 @@ fun SettingsScreen(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Settings", fontWeight = FontWeight.Bold) }
+            TopAppBar(
+                title = { Text("App Preferences", fontWeight = FontWeight.Black) },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface
+                )
             )
         }
     ) { padding ->
@@ -43,86 +47,90 @@ fun SettingsScreen(
                 .padding(padding)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(24.dp)
+                .padding(20.dp)
         ) {
-            SettingsSectionHeader(title = "App Preferences")
+            SettingsSectionHeader(title = "App Customization")
 
             ElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
+                shape = RoundedCornerShape(24.dp),
+                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
                 colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     SettingsToggleItem(
                         icon = Icons.Default.DarkMode,
-                        label = "Dark Mode",
-                        subtitle = "Enable dark theme for the app",
+                        label = "Dark Theme",
+                        subtitle = "Reduce eye strain in low-light conditions",
                         checked = isDarkMode,
                         onCheckedChange = viewModel::toggleDarkMode
                     )
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                     SettingsToggleItem(
                         icon = Icons.Default.Notifications,
-                        label = "Notifications",
-                        subtitle = "Receive updates on complaint status",
+                        label = "Push Notifications",
+                        subtitle = "Receive live status alerts for your reports",
                         checked = isNotificationEnabled,
                         onCheckedChange = viewModel::toggleNotifications
                     )
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                     SettingsClickItem(
                         icon = Icons.Default.Language,
-                        label = "App Language",
+                        label = "Language",
                         subtitle = "English (United States)",
-                        onClick = { /* Placeholder */ }
+                        onClick = { }
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(28.dp))
             SettingsSectionHeader(title = "Support & Legal")
 
             ElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
+                shape = RoundedCornerShape(24.dp),
+                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
                 colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     SettingsClickItem(
                         icon = Icons.AutoMirrored.Filled.HelpOutline,
-                        label = "Help & Support",
-                        onClick = { /* Placeholder */ }
+                        label = "Help & Support Desk",
+                        onClick = { }
                     )
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                     SettingsClickItem(
                         icon = Icons.Default.Policy,
-                        label = "Privacy Policy",
-                        onClick = { /* Placeholder */ }
+                        label = "Privacy Policy & Data Security",
+                        onClick = { }
                     )
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                     SettingsClickItem(
                         icon = Icons.Default.Info,
-                        label = "About App Version",
-                        subtitle = "v1.0.0 (Production Build)",
-                        onClick = { /* Placeholder */ }
+                        label = "About CivicConnect",
+                        subtitle = "v2.0.0 (Production Release)",
+                        onClick = { }
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(36.dp))
 
             Button(
                 onClick = {
                     viewModel.logout()
                     onLogout()
                 },
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.large,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                 contentPadding = PaddingValues(16.dp)
             ) {
-                Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null)
-                Spacer(modifier = Modifier.width(12.dp))
-                Text("Logout and Clear Data", fontWeight = FontWeight.Bold)
+                Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(10.dp))
+                Text("Logout & Reset Session", fontWeight = FontWeight.Bold)
             }
             
             Spacer(modifier = Modifier.height(32.dp))
@@ -134,11 +142,11 @@ fun SettingsScreen(
 fun SettingsSectionHeader(title: String) {
     Text(
         text = title.uppercase(),
-        style = MaterialTheme.typography.labelMedium,
-        fontWeight = FontWeight.Bold,
+        style = MaterialTheme.typography.labelSmall,
+        fontWeight = FontWeight.Black,
         color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(bottom = 12.dp, start = 8.dp),
-        letterSpacing = 1.sp
+        modifier = Modifier.padding(bottom = 10.dp, start = 6.dp),
+        letterSpacing = 1.2.sp
     )
 }
 
@@ -157,28 +165,30 @@ fun SettingsToggleItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Surface(
-            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-            shape = CircleShape,
-            modifier = Modifier.size(36.dp)
+            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.size(40.dp)
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.padding(8.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
         }
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(14.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = label, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
-            Text(text = subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
+            Text(text = label, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(text = subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
             colors = SwitchDefaults.colors(
-                checkedThumbColor = MaterialTheme.colorScheme.primary,
-                checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
+                checkedThumbColor = Color.White,
+                checkedTrackColor = MaterialTheme.colorScheme.primary
             )
         )
     }
@@ -201,29 +211,31 @@ fun SettingsClickItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                shape = CircleShape,
-                modifier = Modifier.size(36.dp)
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.size(40.dp)
             ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier.padding(8.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(14.dp))
             Column {
-                Text(text = label, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+                Text(text = label, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 if (subtitle != null) {
-                    Text(text = subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
+                    Text(text = subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             Spacer(modifier = Modifier.weight(1f))
             Icon(
                 imageVector = Icons.Default.ChevronRight,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                tint = MaterialTheme.colorScheme.outline.copy(alpha = 0.6f)
             )
         }
     }

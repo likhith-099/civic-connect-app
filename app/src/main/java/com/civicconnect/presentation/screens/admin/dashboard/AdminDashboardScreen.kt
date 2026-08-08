@@ -20,12 +20,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.civicconnect.presentation.components.ErrorView
 import com.civicconnect.presentation.components.LoadingView
 import com.civicconnect.presentation.screens.home.StatCard
 import com.civicconnect.presentation.screens.home.StatItem
-
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.civicconnect.presentation.theme.InProgressColor
+import com.civicconnect.presentation.theme.PendingColor
+import com.civicconnect.presentation.theme.RejectedColor
+import com.civicconnect.presentation.theme.ResolvedColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,14 +43,14 @@ fun AdminDashboardScreen(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Admin Dashboard", fontWeight = FontWeight.Black) },
+            TopAppBar(
+                title = { Text("Admin Control Center", fontWeight = FontWeight.Black) },
                 actions = {
                     IconButton(onClick = onNavigateToChat) {
-                        Icon(Icons.Default.AutoAwesome, contentDescription = "AI Assistant")
+                        Icon(Icons.Default.AutoAwesome, contentDescription = "AI Assistant", tint = MaterialTheme.colorScheme.tertiary)
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     titleContentColor = MaterialTheme.colorScheme.onSurface
                 )
@@ -87,21 +90,21 @@ fun AdminDashboardContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(18.dp)
     ) {
         val statItems = listOf(
-            StatItem("Total", stats.totalComplaints, Icons.Default.Assessment, MaterialTheme.colorScheme.primary),
-            StatItem("Pending", stats.pending, Icons.Default.Pending, Color(0xFFF57C00)),
-            StatItem("Active", stats.inProgress, Icons.Default.Autorenew, Color(0xFF1976D2)),
-            StatItem("Solved", stats.resolved, Icons.Default.CheckCircle, Color(0xFF388E3C)),
-            StatItem("Rejected", stats.rejected, Icons.Default.Cancel, Color(0xFFD32F2F)),
-            StatItem("Users", stats.totalUsers, Icons.Default.People, MaterialTheme.colorScheme.tertiary)
+            StatItem("Total Reports", stats.totalComplaints, Icons.Default.Assessment, MaterialTheme.colorScheme.primary),
+            StatItem("Pending Review", stats.pending, Icons.Default.Schedule, PendingColor),
+            StatItem("Active Work", stats.inProgress, Icons.Default.Autorenew, InProgressColor),
+            StatItem("Resolved", stats.resolved, Icons.Default.CheckCircle, ResolvedColor),
+            StatItem("Rejected", stats.rejected, Icons.Default.Cancel, RejectedColor),
+            StatItem("Registered Citizens", stats.totalUsers, Icons.Default.People, MaterialTheme.colorScheme.tertiary)
         )
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
             modifier = Modifier.fillMaxWidth().weight(1f)
         ) {
             items(statItems) { item ->
@@ -109,13 +112,15 @@ fun AdminDashboardContent(
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         Text(
-            text = "Quick Actions",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 16.dp)
+            text = "OPERATIONS & ANALYTICS Shortcuts",
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Black,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(bottom = 12.dp),
+            letterSpacing = 1.sp
         )
 
         Row(
@@ -123,19 +128,19 @@ fun AdminDashboardContent(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             AdminActionButton(
-                label = "Complaints",
+                label = "Management",
                 icon = Icons.Default.List,
                 onClick = onManage,
                 modifier = Modifier.weight(1f)
             )
             AdminActionButton(
-                label = "Insights",
+                label = "AI Insights",
                 icon = Icons.Default.BarChart,
                 onClick = onInsights,
                 modifier = Modifier.weight(1f)
             )
             AdminActionButton(
-                label = "Map",
+                label = "Live Map",
                 icon = Icons.Default.Map,
                 onClick = onMap,
                 modifier = Modifier.weight(1f)
@@ -153,15 +158,23 @@ fun AdminActionButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Button(
+    ElevatedButton(
         onClick = onClick,
-        modifier = modifier.height(60.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer, contentColor = MaterialTheme.colorScheme.onSecondaryContainer)
+        modifier = modifier.height(64.dp),
+        shape = RoundedCornerShape(18.dp),
+        colors = ButtonDefaults.elevatedButtonColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+        ),
+        elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 2.dp)
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp))
-            Text(label, style = MaterialTheme.typography.labelSmall)
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(icon, contentDescription = null, modifier = Modifier.size(22.dp))
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(label, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
         }
     }
 }

@@ -30,23 +30,26 @@ class ComplaintRepositoryImpl @Inject constructor(
             if (response.isSuccessful && response.body() != null) {
                 val complaintsDto = response.body()!!
                 val complaints = complaintsDto.map { it.toDomain() }
-                // Use REPLACE strategy instead of clearing everything to preserve local-only state if any
                 complaintDao.insertComplaints(complaints.map { it.toEntity() })
                 Result.success(complaints)
             } else {
-                Result.failure(Exception(response.message()))
+                fetchLocalComplaints()
             }
         } catch (e: Exception) {
-            val localComplaints = try {
-                complaintDao.getAllComplaints().first().map { it.toDomain() }
-            } catch (ex: Exception) {
-                emptyList<Complaint>()
-            }
+            fetchLocalComplaints()
+        }
+    }
+
+    private suspend fun fetchLocalComplaints(): Result<List<Complaint>> {
+        return try {
+            val localComplaints = complaintDao.getAllComplaints().first().map { it.toDomain() }
             if (localComplaints.isNotEmpty()) {
                 Result.success(localComplaints)
             } else {
-                Result.failure(e)
+                Result.failure(Exception("No complaints found locally or remotely."))
             }
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 
@@ -58,7 +61,26 @@ class ComplaintRepositoryImpl @Inject constructor(
                 complaintDao.insertComplaints(listOf(complaint.toEntity()))
                 Result.success(complaint)
             } else {
-                Result.failure(Exception(response.message()))
+                fetchLocalComplaintById(id)
+            }
+        } catch (e: Exception) {
+            fetchLocalComplaintById(id)
+        }
+    }
+
+    private suspend fun fetchLocalComplaintById(id: String): Result<Complaint> {
+        return try {
+            val localEntity = complaintDao.getComplaintById(id)
+            if (localEntity != null) {
+                Result.success(localEntity.toDomain())
+            } else {
+                val allLocal = complaintDao.getAllComplaints().first().map { it.toDomain() }
+                val match = allLocal.find { it.id == id }
+                if (match != null) {
+                    Result.success(match)
+                } else {
+                    Result.failure(Exception("Complaint with ID $id not found."))
+                }
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -68,39 +90,47 @@ class ComplaintRepositoryImpl @Inject constructor(
     override suspend fun upvoteComplaint(id: String): Result<Complaint> {
         return try {
             val response = api.upvoteComplaint(id)
-            when {
-                response.isSuccessful -> {
-                    // Some backends return 200 with the updated complaint body,
-                    // others return 200 with an empty or non-standard body.
-                    val body = response.body()
-                    if (body != null) {
-                        val complaint = body.toDomain()
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null) {
+                    val complaint = body.toDomain()
+                    complaintDao.insertComplaints(listOf(complaint.toEntity()))
+                    Result.success(complaint)
+                } else {
+                    val refetch = api.getComplaintById(id)
+                    if (refetch.isSuccessful && refetch.body() != null) {
+                        val complaint = refetch.body()!!.toDomain()
                         complaintDao.insertComplaints(listOf(complaint.toEntity()))
                         Result.success(complaint)
                     } else {
-                        // Body is null — re-fetch the complaint to get the updated vote count
-                        val refetch = api.getComplaintById(id)
-                        if (refetch.isSuccessful && refetch.body() != null) {
-                            val complaint = refetch.body()!!.toDomain()
-                            complaintDao.insertComplaints(listOf(complaint.toEntity()))
-                            Result.success(complaint)
-                        } else {
-                            Result.failure(Exception("Upvoted, but failed to refresh: ${refetch.message()}"))
-                        }
+                        upvoteLocalComplaint(id)
                     }
                 }
-                else -> {
-                    // Extract JSON error message if available
-                    val errorBody = response.errorBody()?.string()
-                    val msg = when {
-                        !errorBody.isNullOrBlank() && errorBody.contains("message") -> {
-                            try {
-                                org.json.JSONObject(errorBody).optString("message", response.message())
-                            } catch (_: Exception) { response.message() }
-                        }
-                        else -> response.message()
-                    }
-                    Result.failure(Exception(msg))
+            } else {
+                upvoteLocalComplaint(id)
+            }
+        } catch (e: Exception) {
+            upvoteLocalComplaint(id)
+        }
+    }
+
+    private suspend fun upvoteLocalComplaint(id: String): Result<Complaint> {
+        return try {
+            val localEntity = complaintDao.getComplaintById(id)
+            if (localEntity != null) {
+                val currentDomain = localEntity.toDomain()
+                val updatedComplaint = currentDomain.copy(votes = currentDomain.votes + 1)
+                complaintDao.insertComplaints(listOf(updatedComplaint.toEntity()))
+                Result.success(updatedComplaint)
+            } else {
+                val allLocal = complaintDao.getAllComplaints().first().map { it.toDomain() }
+                val match = allLocal.find { it.id == id }
+                if (match != null) {
+                    val updatedComplaint = match.copy(votes = match.votes + 1)
+                    complaintDao.insertComplaints(listOf(updatedComplaint.toEntity()))
+                    Result.success(updatedComplaint)
+                } else {
+                    Result.failure(Exception("Failed to locate complaint for support."))
                 }
             }
         } catch (e: Exception) {
@@ -116,10 +146,10 @@ class ComplaintRepositoryImpl @Inject constructor(
                 complaintDao.insertComplaints(complaints.map { it.toEntity() })
                 Result.success(complaints)
             } else {
-                Result.failure(Exception(response.message()))
+                fetchLocalComplaints()
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            fetchLocalComplaints()
         }
     }
 
@@ -153,7 +183,6 @@ class ComplaintRepositoryImpl @Inject constructor(
             if (response.isSuccessful && response.body() != null) {
                 val complaintDto = response.body()!!
                 val complaint = complaintDto.toDomain()
-                // Store in local DB immediately so it appears in feed
                 complaintDao.insertComplaints(listOf(complaint.toEntity()))
                 Result.success(complaint)
             } else {

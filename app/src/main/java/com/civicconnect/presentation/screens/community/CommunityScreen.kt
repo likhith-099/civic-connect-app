@@ -1,16 +1,20 @@
 package com.civicconnect.presentation.screens.community
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -19,14 +23,15 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.civicconnect.presentation.components.CommunityShimmer
 import com.civicconnect.presentation.components.EmptyStateView
 import com.civicconnect.presentation.components.ErrorView
 import com.civicconnect.presentation.components.ShimmerItem
 import com.civicconnect.presentation.screens.community.components.ComplaintCard
-import com.civicconnect.presentation.screens.complaint.MyComplaintsViewModel
-import com.civicconnect.presentation.screens.complaint.MyComplaintsState
-import com.civicconnect.presentation.screens.complaint.MyComplaintCard
 import com.civicconnect.presentation.screens.complaint.EmptyMyComplaintsState
+import com.civicconnect.presentation.screens.complaint.MyComplaintCard
+import com.civicconnect.presentation.screens.complaint.MyComplaintsState
+import com.civicconnect.presentation.screens.complaint.MyComplaintsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,32 +66,34 @@ fun CommunityScreen(
     Scaffold(
         topBar = {
             Column {
-                CenterAlignedTopAppBar(
+                TopAppBar(
                     title = {
                         Text(
-                            text = "Community & Reports",
+                            text = "Community Reports",
                             style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Black
                         )
                     },
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = MaterialTheme.colorScheme.surface,
                         titleContentColor = MaterialTheme.colorScheme.onSurface
                     )
                 )
-                TabRow(
+                PrimaryTabRow(
                     selectedTabIndex = selectedTab,
                     containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.primary
+                    contentColor = MaterialTheme.colorScheme.primary,
+                    divider = { HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)) }
                 ) {
                     tabs.forEachIndexed { index, title ->
                         Tab(
                             selected = selectedTab == index,
                             onClick = { selectedTab = index },
-                            text = { 
+                            text = {
                                 Text(
                                     text = title,
-                                    fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Medium
+                                    fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Medium,
+                                    fontSize = 15.sp
                                 )
                             }
                         )
@@ -116,18 +123,19 @@ fun CommunityScreen(
                             val complaints = state.complaints
                             if (complaints.isEmpty()) {
                                 EmptyStateView(
-                                    message = "No active complaints in your community right now."
+                                    message = "No active community reports right now. Be the first to submit one!"
                                 )
                             } else {
                                 LazyColumn(
                                     modifier = Modifier.fillMaxSize(),
-                                    contentPadding = PaddingValues(16.dp),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                                    verticalArrangement = Arrangement.spacedBy(10.dp)
                                 ) {
                                     items(complaints) { complaint ->
                                         ComplaintCard(
                                             complaint = complaint,
-                                            onClick = { onNavigateToDetails(complaint.id) }
+                                            onClick = { onNavigateToDetails(complaint.id) },
+                                            onUpvote = { communityViewModel.upvote(complaint.id) }
                                         )
                                     }
                                 }
@@ -141,7 +149,7 @@ fun CommunityScreen(
                         }
                         is CommunityState.Empty -> {
                             EmptyStateView(
-                                message = "No active complaints in your community right now."
+                                message = "No active community reports right now. Be the first to submit one!"
                             )
                         }
                     }
@@ -152,30 +160,39 @@ fun CommunityScreen(
                 val filters = listOf("All", "Pending", "In Progress", "Resolved", "Rejected")
 
                 Column(modifier = Modifier.fillMaxSize()) {
-                    // Search Bar
+                    // Search Input
                     OutlinedTextField(
                         value = searchQuery,
                         onValueChange = myComplaintsViewModel::onSearchQueryChange,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        placeholder = { Text("Search my reports...") },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                        shape = MaterialTheme.shapes.medium,
-                        singleLine = true
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                        placeholder = { Text("Search your reports...") },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                        shape = RoundedCornerShape(16.dp),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = MaterialTheme.colorScheme.surface,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                        )
                     )
 
-                    // Filter Chips
+                    // Filter Chips Bar
                     LazyRow(
                         contentPadding = PaddingValues(horizontal = 16.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.padding(bottom = 8.dp)
+                        modifier = Modifier.padding(bottom = 10.dp)
                     ) {
                         items(filters) { filter ->
                             FilterChip(
                                 selected = selectedFilter == filter,
                                 onClick = { myComplaintsViewModel.onFilterChange(filter) },
-                                label = { Text(filter) }
+                                label = { Text(filter, fontWeight = FontWeight.Bold) },
+                                shape = RoundedCornerShape(50.dp),
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                    selectedLabelColor = Color.White
+                                )
                             )
                         }
                     }
@@ -194,21 +211,17 @@ fun CommunityScreen(
                                 if (complaints.isEmpty() && searchQuery.isBlank() && selectedFilter == "All") {
                                     EmptyMyComplaintsState()
                                 } else if (complaints.isEmpty()) {
-                                    Box(
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text("No reports matching your criteria.")
-                                    }
+                                    EmptyStateView(message = "No reports matching filters.")
                                 } else {
                                     LazyColumn(
-                                        contentPadding = PaddingValues(16.dp),
-                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                                        verticalArrangement = Arrangement.spacedBy(10.dp)
                                     ) {
                                         items(complaints) { complaint ->
                                             MyComplaintCard(
                                                 complaint = complaint,
-                                                onClick = { onNavigateToDetails(complaint.id) }
+                                                onClick = { onNavigateToDetails(complaint.id) },
+                                                onUpvote = { myComplaintsViewModel.upvote(complaint.id) }
                                             )
                                         }
                                     }
@@ -224,43 +237,6 @@ fun CommunityScreen(
                                 EmptyMyComplaintsState()
                             }
                         }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun CommunityShimmer() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        repeat(3) {
-            ElevatedCard(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                shape = MaterialTheme.shapes.large
-            ) {
-                Column {
-                    ShimmerItem(modifier = Modifier.fillMaxWidth(), height = 200.dp)
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            ShimmerItem(width = 80.dp)
-                            ShimmerItem(width = 60.dp)
-                        }
-                        Spacer(modifier = Modifier.height(12.dp))
-                        ShimmerItem(modifier = Modifier.fillMaxWidth(), height = 24.dp)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        ShimmerItem(modifier = Modifier.fillMaxWidth(0.7f))
-                        Spacer(modifier = Modifier.height(16.dp))
-                        ShimmerItem(width = 120.dp)
                     }
                 }
             }
