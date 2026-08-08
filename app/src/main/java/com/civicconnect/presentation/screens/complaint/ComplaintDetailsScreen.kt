@@ -41,6 +41,7 @@ fun ComplaintDetailsScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val msg by viewModel.message.collectAsStateWithLifecycle()
+    val isUpvoting by viewModel.isUpvoting.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     LaunchedEffect(msg) {
@@ -71,7 +72,7 @@ fun ComplaintDetailsScreen(
                 is ComplaintDetailsState.Loading -> LoadingView()
                 is ComplaintDetailsState.Success -> {
                     val complaint = (state as ComplaintDetailsState.Success).complaint
-                    ComplaintDetailsContent(complaint, viewModel::upvote)
+                    ComplaintDetailsContent(complaint, isUpvoting, viewModel::upvote)
                 }
                 is ComplaintDetailsState.Error -> {
                     ErrorView(
@@ -88,6 +89,7 @@ fun ComplaintDetailsScreen(
 @Composable
 fun ComplaintDetailsContent(
     complaint: Complaint,
+    isUpvoting: Boolean,
     onUpvote: () -> Unit
 ) {
     val scrollState = rememberScrollState()
@@ -265,15 +267,30 @@ fun ComplaintDetailsContent(
                 onClick = onUpvote,
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = MaterialTheme.shapes.large,
+                enabled = !isUpvoting,
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
             ) {
-                Icon(Icons.Default.ThumbUp, contentDescription = null)
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = "Support Issue (${complaint.votes})",
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 16.sp
-                )
+                if (isUpvoting) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "Supporting...",
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 16.sp
+                    )
+                } else {
+                    Icon(Icons.Default.ThumbUp, contentDescription = null)
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "Support Issue (${complaint.votes})",
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 16.sp
+                    )
+                }
             }
             
             Spacer(modifier = Modifier.height(40.dp))

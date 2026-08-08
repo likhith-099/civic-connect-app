@@ -32,6 +32,10 @@ class ComplaintDetailsViewModel @Inject constructor(
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message
 
+    // Separate loading flag for upvote so the main state doesn't flicker to Loading
+    private val _isUpvoting = MutableStateFlow(false)
+    val isUpvoting: StateFlow<Boolean> = _isUpvoting
+
     private val complaintId: String = checkNotNull(savedStateHandle["complaintId"])
 
     init {
@@ -45,20 +49,33 @@ class ComplaintDetailsViewModel @Inject constructor(
             result.onSuccess {
                 _state.value = ComplaintDetailsState.Success(it)
             }.onFailure {
-                // If it's a 404 or similar, we could show Empty, otherwise Error
                 _state.value = ComplaintDetailsState.Error(it.message ?: "Failed to load complaint")
             }
         }
     }
 
     fun upvote() {
+        // Guard: do nothing if already upvoting
+        if (_isUpvoting.value) return
+
         viewModelScope.launch {
+            _isUpvoting.value = true
             val result = upvoteComplaintUseCase(complaintId)
             result.onSuccess { updatedComplaint ->
                 _state.value = ComplaintDetailsState.Success(updatedComplaint)
-            }.onFailure {
-                _message.value = it.message ?: "Failed to upvote complaint"
+                _message.value = "✓ Your support has been recorded!"
+            }.onFailure { error ->
+                val msg = when {
+                    error.message?.contains("already", ignoreCase = true) == true ->
+                        "You've already supported this issue."
+                    error.message?.contains("401", ignoreCase = true) == true ||
+                    error.message?.contains("unauthorized", ignoreCase = true) == true ->
+                        "Please log in to support issues."
+                    else -> error.message ?: "Failed to record your support. Try again."
+                }
+                _message.value = msg
             }
+            _isUpvoting.value = false
         }
     }
 

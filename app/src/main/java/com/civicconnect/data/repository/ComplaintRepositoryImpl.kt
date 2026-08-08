@@ -68,12 +68,40 @@ class ComplaintRepositoryImpl @Inject constructor(
     override suspend fun upvoteComplaint(id: String): Result<Complaint> {
         return try {
             val response = api.upvoteComplaint(id)
-            if (response.isSuccessful && response.body() != null) {
-                val complaint = response.body()!!.toDomain()
-                complaintDao.insertComplaints(listOf(complaint.toEntity()))
-                Result.success(complaint)
-            } else {
-                Result.failure(Exception(response.message()))
+            when {
+                response.isSuccessful -> {
+                    // Some backends return 200 with the updated complaint body,
+                    // others return 200 with an empty or non-standard body.
+                    val body = response.body()
+                    if (body != null) {
+                        val complaint = body.toDomain()
+                        complaintDao.insertComplaints(listOf(complaint.toEntity()))
+                        Result.success(complaint)
+                    } else {
+                        // Body is null — re-fetch the complaint to get the updated vote count
+                        val refetch = api.getComplaintById(id)
+                        if (refetch.isSuccessful && refetch.body() != null) {
+                            val complaint = refetch.body()!!.toDomain()
+                            complaintDao.insertComplaints(listOf(complaint.toEntity()))
+                            Result.success(complaint)
+                        } else {
+                            Result.failure(Exception("Upvoted, but failed to refresh: ${refetch.message()}"))
+                        }
+                    }
+                }
+                else -> {
+                    // Extract JSON error message if available
+                    val errorBody = response.errorBody()?.string()
+                    val msg = when {
+                        !errorBody.isNullOrBlank() && errorBody.contains("message") -> {
+                            try {
+                                org.json.JSONObject(errorBody).optString("message", response.message())
+                            } catch (_: Exception) { response.message() }
+                        }
+                        else -> response.message()
+                    }
+                    Result.failure(Exception(msg))
+                }
             }
         } catch (e: Exception) {
             Result.failure(e)

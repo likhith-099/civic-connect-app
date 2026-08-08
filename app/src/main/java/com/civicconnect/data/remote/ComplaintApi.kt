@@ -12,6 +12,7 @@ interface ComplaintApi {
     @GET("api/complaints/{id}")
     suspend fun getComplaintById(@Path("id") id: String): Response<ComplaintDto>
 
+    @Headers("Content-Type: application/json")
     @POST("api/complaints/{id}/upvote")
     suspend fun upvoteComplaint(@Path("id") id: String): Response<ComplaintDto>
 
