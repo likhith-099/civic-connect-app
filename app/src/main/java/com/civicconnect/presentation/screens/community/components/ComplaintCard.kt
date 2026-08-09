@@ -226,7 +226,7 @@ fun ComplaintCard(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = formatDate(complaint.createdAt),
+                                text = com.civicconnect.utils.DateTimeUtils.formatIsoToDisplay(complaint.createdAt),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.outline
                             )
@@ -328,17 +328,3 @@ private fun categoryIcon(category: String): ImageVector = when (category.lowerca
     "sanitation" -> Icons.Default.Sanitizer
     else -> Icons.Default.Report
 }
-
-private fun formatDate(dateStr: String): String {
-    return try {
-        val parts = dateStr.take(10).split("-")
-        if (parts.size == 3) "${parts[2]} ${monthName(parts[1].toInt())} ${parts[0]}"
-        else dateStr.take(10)
-    } catch (e: Exception) {
-        dateStr.take(10)
-    }
-}
-
-private fun monthName(m: Int) = listOf(
-    "Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"
-).getOrElse(m - 1) { "" }

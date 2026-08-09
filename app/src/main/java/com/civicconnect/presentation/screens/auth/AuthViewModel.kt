@@ -6,6 +6,7 @@ import com.civicconnect.data.dto.auth.LoginRequest
 import com.civicconnect.data.dto.auth.RegisterRequest
 import com.civicconnect.domain.usecase.auth.LoginUseCase
 import com.civicconnect.domain.usecase.auth.RegisterUseCase
+import com.civicconnect.utils.ValidationUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -59,7 +60,7 @@ class AuthViewModel @Inject constructor(
                 _authState.value = AuthState.Error("Email cannot be empty")
                 false
             }
-            !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
+            !ValidationUtils.isValidEmail(email) -> {
                 _authState.value = AuthState.Error("Invalid email format")
                 false
             }
@@ -67,7 +68,7 @@ class AuthViewModel @Inject constructor(
                 _authState.value = AuthState.Error("Password cannot be empty")
                 false
             }
-            password.length < 6 -> {
+            !ValidationUtils.isValidPassword(password, 6) -> {
                 _authState.value = AuthState.Error("Password must be at least 6 characters")
                 false
             }
@@ -85,7 +86,7 @@ class AuthViewModel @Inject constructor(
                 _authState.value = AuthState.Error("Email cannot be empty")
                 false
             }
-            !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
+            !ValidationUtils.isValidEmail(email) -> {
                 _authState.value = AuthState.Error("Invalid email format")
                 false
             }
@@ -93,7 +94,7 @@ class AuthViewModel @Inject constructor(
                 _authState.value = AuthState.Error("Password cannot be empty")
                 false
             }
-            password.length < 6 -> {
+            !ValidationUtils.isValidPassword(password, 6) -> {
                 _authState.value = AuthState.Error("Password must be at least 6 characters")
                 false
             }

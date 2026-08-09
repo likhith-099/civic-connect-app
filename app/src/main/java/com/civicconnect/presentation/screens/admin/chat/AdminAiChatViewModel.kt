@@ -4,12 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.civicconnect.domain.model.admin.AdminChatMessage
 import com.civicconnect.domain.usecase.admin.ChatWithAiUseCase
+import com.civicconnect.utils.DateTimeUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.*
 import javax.inject.Inject
 
 @HiltViewModel
@@ -18,7 +17,7 @@ class AdminAiChatViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _messages = MutableStateFlow<List<AdminChatMessage>>(
-        listOf(AdminChatMessage("Hello Admin! I am your CivicConnect AI Assistant. How can I help you today?", true, currentTime()))
+        listOf(AdminChatMessage("Hello Admin! I am your CivicConnect AI Assistant. How can I help you today?", true, DateTimeUtils.getCurrentTimeString()))
     )
     val messages: StateFlow<List<AdminChatMessage>> = _messages
 
@@ -28,7 +27,7 @@ class AdminAiChatViewModel @Inject constructor(
     fun sendMessage(content: String) {
         if (content.isBlank()) return
 
-        val userMessage = AdminChatMessage(content, false, currentTime())
+        val userMessage = AdminChatMessage(content, false, DateTimeUtils.getCurrentTimeString())
         _messages.value = _messages.value + userMessage
 
         viewModelScope.launch {
@@ -38,13 +37,9 @@ class AdminAiChatViewModel @Inject constructor(
             result.onSuccess { aiMessage ->
                 _messages.value = _messages.value + aiMessage
             }.onFailure {
-                val errorMessage = AdminChatMessage("Error: ${it.message ?: "Failed to get AI response"}", true, currentTime())
+                val errorMessage = AdminChatMessage("Error: ${it.message ?: "Failed to get AI response"}", true, DateTimeUtils.getCurrentTimeString())
                 _messages.value = _messages.value + errorMessage
             }
         }
-    }
-
-    private fun currentTime(): String {
-        return SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
     }
 }
